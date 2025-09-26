@@ -1,0 +1,73 @@
+
+body{
+    display: flex;
+    flex-direction: column;
+}
+.workSpace{
+    width: 100vw;
+    height: auto;
+    min-height: 100vh;
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
+.prompt{
+    height: 22px;
+    width: 500px;
+    background-color: transparent;
+}
+div {
+    width: 200px;
+    height: 200px;
+    background-color: aqua;
+}
+section{
+    width: 300px;
+    height: 20px;
+    background-color: greenyellow;
+}
+main{
+    height: 100vh;
+    width: 100vw;
+    background-color: gold;
+}
+span{
+    height: 100px;
+    width: 200px;
+    background-color: purple;
+}
+footer{
+    height: 200px;
+    width: 200px;
+    background-color: black;
+}
+header{
+    height: 100px;
+    width: 200px;
+    background-color: rgba(245, 245, 145, 0.984);
+}
+.presets{
+    background-color: transparent;
+    overflow: hidden;
+    position: relative;
+    width: 100vw;
+    height:230px;
+    display: flex;
+}
+.preset{
+    background-color: transparent;
+    height: auto;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+.preset-2{
+    background-color: transparent;
+    height: auto;
+    width: 300px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
