@@ -13,6 +13,7 @@ let isCurving = false;
 let selectedElement = null;
 let color;
 
+
 Add.addEventListener("click", ()=>{
     const whatElement = element.value;
     const whatStyle = styleSpec.value;
@@ -52,6 +53,7 @@ defaultColor.forEach((btn) =>{
 });
 
 function makeDraggable (G){ 
+    const container = workSpace;
     let offsetX, offsetY;
     // let isDragging = false;
     G.style.position = "absolute";
@@ -61,16 +63,21 @@ function makeDraggable (G){
             if(isCurving)return;
             isDragging = true;
 
+            const rect = G.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+                
             activeElement = G;
-                offsetX = e.clientX - G.offsetLeft;
-                offsetY = e.clientY - G.offsetTop;
+                offsetX = e.clientX - rect.left;
+                offsetY = e.clientY - rect.top;
                 G.style.cursor = "grabbing";
     })
 
     document.addEventListener("mousemove", (e)=>{
         if(isDragging && activeElement){
-            activeElement.style.left = (e.clientX - offsetX) + "px";
-            activeElement.style.top = (e.clientY - offsetY) + "px";
+            const bounds = workSpace.getBoundingClientRect();
+            activeElement.style.left = (e.clientX - bounds.left - offsetX) + "px";
+            activeElement.style.top = (e.clientY - bounds.top - offsetY) + "px";
         }
     })
 
@@ -88,20 +95,23 @@ function makeDraggable (G){
         //  by clicking and adjusting manually
     function makeAdjustable (H) {
         let offsetRight, offsetBottom, offsetX, offsetY;
-        
+        const container = workSpace;
 
         H.addEventListener("mousedown", (e)=>{
             if(isDragging)return;
             if(isCurving)return;
-            offsetRight = H.offsetWidth - (e.clientX - H.offsetLeft);
-            offsetBottom = H.offsetHeight - (e.clientY - H.offsetTop)
-            offsetX = e.clientX - H.offsetLeft;
-            offsetY = e.clientY - H.offsetTop;
+            const rect = H.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            offsetRight = rect.right - e.clientX;
+            offsetBottom = rect.bottom - e.clientY;
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
 
             let startX = e.clientX;
             let startY = e.clientY;
-            let startWidth = H.offsetWidth;
-            let startHeight = H.offsetHeight;
+            let startWidth = rect.width;
+            let startHeight = rect.height;
+            let startTop = rect.top - containerRect.top;
             let resizeHandler;
            
             if( offsetX < 10 ){
@@ -136,9 +146,9 @@ function makeDraggable (G){
                 isResizing = true;
                 H.style.cursor = "ns-resize"
                 resizeHandler = (e) => {
-                        let newHeight = (e.clientY - startY);
-                        H.style.height = (startHeight - newHeight) + "px";
-                        H.style.top = (startY+ newHeight) + "px";
+                        let newHeight = (startHeight - (e.clientY - startY));
+                        H.style.height = ( newHeight) + "px";
+                        H.style.top = (startTop + (e.clientY - startY)) + "px";
                         }
                      document.addEventListener("mousemove", resizeHandler)
             }
@@ -162,46 +172,52 @@ function makeDraggable (G){
     }
 
     //attempting to add border radius by dragging the edges 
-function makeCurvable (J){
-    let offsetX, offsetY, offsetBottom, offsetRight;
-    let isCurvingActive = false;
-    let curveHandler, mouseupHandler;
-    J.addEventListener("mousedown", (e)=>{
-        if (isDragging) return;
-        if (isResizing) return;
-        if (isCurvingActive) return;
-        let horix = e.clientX;
-        let verty = e.clientY;
+function makeCurvable(J) {
+  const container = workSpace;
+  let curveHandler = null;
 
-        offsetRight = J.offsetWidth - (e.clientX - J.offsetLeft);
-        offsetBottom = J.offsetHeight - (e.clientY - J.offsetTop)
-        offsetX = e.clientX - J.offsetLeft;
-        offsetY = e.clientY - J.offsetTop;
+  J.addEventListener("mousedown", (e) => {
+    if (isDragging || isResizing) return;
 
-        if((offsetX < 10 && offsetY < 10) ||        // top-left
-            (offsetX < 10 && offsetBottom < 10) ||   // bottom-left
-            (offsetRight < 10 && offsetY < 10) ||    // top-right
-            (offsetRight < 10 && offsetBottom < 10)){
-                isCurving = true;
-                isCurvingActive = true;
-                J.style.cursor = "crosshair";
-                curveHandler = function(e){
-                    let distance = Math.max(Math.abs(e.clientX - horix),
-                        Math.abs(e.clientY-verty));
-                    J.style.borderRadius = (distance) + "px";
-                };
-                mouseupHandler = function removeFunctions(){
-                    document.removeEventListener("mousemove", curveHandler);
-                    document.removeEventListener("mouseup", mouseupHandler);
-                    isCurving = false;
-                    isCurvingActive = false;
-                    J.style.cursor ="default";
-                };
-                document.addEventListener("mousemove", curveHandler);
-                document.addEventListener("mouseup", mouseupHandler);
-        }
-    })
+    const rect = J.getBoundingClientRect();
+    const offsetX = e.clientX - rect.left;
+    const offsetY = e.clientY - rect.top;
+    const offsetRight = rect.right - e.clientX;
+    const offsetBottom = rect.bottom - e.clientY;
+
+    const tol = 10;
+    const nearCorner =
+      (offsetX < tol && offsetY < tol) ||
+      (offsetX < tol && offsetBottom < tol) ||
+      (offsetRight < tol && offsetY < tol) ||
+      (offsetRight < tol && offsetBottom < tol);
+
+    if (!nearCorner) return;
+
+    isCurving = true;
+    J.style.cursor = "crosshair";
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startRadius = parseInt(window.getComputedStyle(J).borderRadius) || 0;
+
+    curveHandler = (ev) => {
+      const distance = Math.max(
+        Math.abs(ev.clientX - startX),
+        Math.abs(ev.clientY - startY)
+      );
+      J.style.borderRadius = (startRadius + distance) + "px";
+    };
+
+    document.addEventListener("mousemove", curveHandler);
+    document.addEventListener("mouseup", function stop() {
+      document.removeEventListener("mousemove", curveHandler);
+      document.removeEventListener("mouseup", stop);
+      isCurving = false;
+      J.style.cursor = "default";
+    });
+  });
 }
+
 
 function makeSelectable(E) {
     E.addEventListener("click", function(e) {
