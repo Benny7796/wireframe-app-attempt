@@ -91,8 +91,6 @@ function makeDraggable (G){
         }
 
 
-        //trying to adjust the width and height of an already created object
-        //  by clicking and adjusting manually
     function makeAdjustable (H) {
         let offsetRight, offsetBottom, offsetX, offsetY;
         const container = workSpace;

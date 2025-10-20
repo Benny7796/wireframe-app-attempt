@@ -11,6 +11,7 @@ body{
     display: flex;
     overflow: hidden;
     position: relative;
+    background-color: grey;
 }
 .prompt{
     height: 22px;
